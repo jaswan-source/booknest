@@ -1,43 +1,21 @@
-# data-view-buffer <sup>[![Version Badge][npm-version-svg]][package-url]</sup>
+Copyright (c) 2013 Kael Zhang <i@kael.me>, contributors
+http://kael.me/
 
-[![github actions][actions-image]][actions-url]
-[![coverage][codecov-image]][codecov-url]
-[![License][license-image]][license-url]
-[![Downloads][downloads-image]][downloads-url]
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-[![npm badge][npm-badge-png]][package-url]
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-Get the ArrayBuffer out of a DataView, robustly.
-
-This will work in node <= 0.10 and < 0.11.4, where there's no prototype accessor, only a nonconfigurable own property.
-It will also work in modern engines where `DataView.prototype.buffer` has been deleted after this module has loaded.
-
-## Example
-
-```js
-const dataViewBuffer = require('data-view-buffer');
-const assert = require('assert');
-
-const ab = new ArrayBuffer(0);
-const dv = new DataView(ab);
-assert.equal(dataViewBuffer(dv), ab);
-```
-
-## Tests
-Simply clone the repo, `npm install`, and run `npm test`
-
-[package-url]: https://npmjs.org/package/data-view-buffer
-[npm-version-svg]: https://versionbadg.es/inspect-js/data-view-buffer.svg
-[deps-svg]: https://david-dm.org/inspect-js/data-view-buffer.svg
-[deps-url]: https://david-dm.org/inspect-js/data-view-buffer
-[dev-deps-svg]: https://david-dm.org/inspect-js/data-view-buffer/dev-status.svg
-[dev-deps-url]: https://david-dm.org/inspect-js/data-view-buffer#info=devDependencies
-[npm-badge-png]: https://nodei.co/npm/data-view-buffer.png?downloads=true&stars=true
-[license-image]: https://img.shields.io/npm/l/data-view-buffer.svg
-[license-url]: LICENSE
-[downloads-image]: https://img.shields.io/npm/dm/data-view-buffer.svg
-[downloads-url]: https://npm-stat.com/charts.html?package=data-view-buffer
-[codecov-image]: https://codecov.io/gh/inspect-js/data-view-buffer/branch/main/graphs/badge.svg
-[codecov-url]: https://app.codecov.io/gh/inspect-js/data-view-buffer/
-[actions-image]: https://img.shields.io/endpoint?url=https://github-actions-badge-u3jn4tfpocch.runkit.sh/inspect-js/data-view-buffer
-[actions-url]: https://github.com/inspect-js/data-view-buffer/actions
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

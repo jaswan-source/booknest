@@ -1,128 +1,89 @@
-declare namespace QuickLRU {
-	interface Options<KeyType, ValueType> {
-		/**
-		The maximum number of milliseconds an item should remain in the cache.
+'use strict';
+const path = require('path');
+const locatePath = require('locate-path');
+const pathExists = require('path-exists');
 
-		@default Infinity
+const stop = Symbol('findUp.stop');
 
-		By default, `maxAge` will be `Infinity`, which means that items will never expire.
-		Lazy expiration upon the next write or read call.
+module.exports = async (name, options = {}) => {
+	let directory = path.resolve(options.cwd || '');
+	const {root} = path.parse(directory);
+	const paths = [].concat(name);
 
-		Individual expiration of an item can be specified by the `set(key, value, maxAge)` method.
-		*/
-		readonly maxAge?: number;
+	const runMatcher = async locateOptions => {
+		if (typeof name !== 'function') {
+			return locatePath(paths, locateOptions);
+		}
 
-		/**
-		The maximum number of items before evicting the least recently used items.
-		*/
-		readonly maxSize: number;
+		const foundPath = await name(locateOptions.cwd);
+		if (typeof foundPath === 'string') {
+			return locatePath([foundPath], locateOptions);
+		}
 
-		/**
-		Called right before an item is evicted from the cache.
+		return foundPath;
+	};
 
-		Useful for side effects or for items like object URLs that need explicit cleanup (`revokeObjectURL`).
-		*/
-		onEviction?: (key: KeyType, value: ValueType) => void;
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		// eslint-disable-next-line no-await-in-loop
+		const foundPath = await runMatcher({...options, cwd: directory});
+
+		if (foundPath === stop) {
+			return;
+		}
+
+		if (foundPath) {
+			return path.resolve(directory, foundPath);
+		}
+
+		if (directory === root) {
+			return;
+		}
+
+		directory = path.dirname(directory);
 	}
-}
+};
 
-declare class QuickLRU<KeyType, ValueType>
-	implements Iterable<[KeyType, ValueType]> {
-	/**
-	The stored item count.
-	*/
-	readonly size: number;
+module.exports.sync = (name, options = {}) => {
+	let directory = path.resolve(options.cwd || '');
+	const {root} = path.parse(directory);
+	const paths = [].concat(name);
 
-	/**
-	Simple ["Least Recently Used" (LRU) cache](https://en.m.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_.28LRU.29).
+	const runMatcher = locateOptions => {
+		if (typeof name !== 'function') {
+			return locatePath.sync(paths, locateOptions);
+		}
 
-	The instance is [`iterable`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Iteration_protocols) so you can use it directly in a [`for…of`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/for...of) loop.
+		const foundPath = name(locateOptions.cwd);
+		if (typeof foundPath === 'string') {
+			return locatePath.sync([foundPath], locateOptions);
+		}
 
-	@example
-	```
-	import QuickLRU = require('quick-lru');
+		return foundPath;
+	};
 
-	const lru = new QuickLRU({maxSize: 1000});
+	// eslint-disable-next-line no-constant-condition
+	while (true) {
+		const foundPath = runMatcher({...options, cwd: directory});
 
-	lru.set('🦄', '🌈');
+		if (foundPath === stop) {
+			return;
+		}
 
-	lru.has('🦄');
-	//=> true
+		if (foundPath) {
+			return path.resolve(directory, foundPath);
+		}
 
-	lru.get('🦄');
-	//=> '🌈'
-	```
-	*/
-	constructor(options: QuickLRU.Options<KeyType, ValueType>);
+		if (directory === root) {
+			return;
+		}
 
-	[Symbol.iterator](): IterableIterator<[KeyType, ValueType]>;
+		directory = path.dirname(directory);
+	}
+};
 
-	/**
-	Set an item. Returns the instance.
+module.exports.exists = pathExists;
 
-	Individual expiration of an item can be specified with the `maxAge` option. If not specified, the global `maxAge` value will be used in case it is specified in the constructor, otherwise the item will never expire.
+module.exports.sync.exists = pathExists.sync;
 
-	@returns The list instance.
-	*/
-	set(key: KeyType, value: ValueType, options?: {maxAge?: number}): this;
-
-	/**
-	Get an item.
-
-	@returns The stored item or `undefined`.
-	*/
-	get(key: KeyType): ValueType | undefined;
-
-	/**
-	Check if an item exists.
-	*/
-	has(key: KeyType): boolean;
-
-	/**
-	Get an item without marking it as recently used.
-
-	@returns The stored item or `undefined`.
-	*/
-	peek(key: KeyType): ValueType | undefined;
-
-	/**
-	Delete an item.
-
-	@returns `true` if the item is removed or `false` if the item doesn't exist.
-	*/
-	delete(key: KeyType): boolean;
-
-	/**
-	Delete all items.
-	*/
-	clear(): void;
-
-	/**
-	Update the `maxSize` in-place, discarding items as necessary. Insertion order is mostly preserved, though this is not a strong guarantee.
-
-	Useful for on-the-fly tuning of cache sizes in live systems.
-	*/
-	resize(maxSize: number): void;
-
-	/**
-	Iterable for all the keys.
-	*/
-	keys(): IterableIterator<KeyType>;
-
-	/**
-	Iterable for all the values.
-	*/
-	values(): IterableIterator<ValueType>;
-
-	/**
-	Iterable for all entries, starting with the oldest (ascending in recency).
-	*/
-	entriesAscending(): IterableIterator<[KeyType, ValueType]>;
-
-	/**
-	Iterable for all entries, starting with the newest (descending in recency).
-	*/
-	entriesDescending(): IterableIterator<[KeyType, ValueType]>;
-}
-
-export = QuickLRU;
+module.exports.stop = stop;
