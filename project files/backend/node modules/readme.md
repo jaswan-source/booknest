@@ -1,55 +1,42 @@
 {
-  "name": "concat-stream",
-  "version": "2.0.0",
-  "description": "writable stream that concatenates strings or binary data and calls a callback with the result",
-  "tags": [
-    "stream",
-    "simple",
-    "util",
-    "utility"
-  ],
-  "author": "Max Ogden <max@maxogden.com>",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/maxogden/concat-stream.git"
+  "name": "object-assign",
+  "version": "4.1.1",
+  "description": "ES2015 `Object.assign()` ponyfill",
+  "license": "MIT",
+  "repository": "sindresorhus/object-assign",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
   },
-  "bugs": {
-    "url": "http://github.com/maxogden/concat-stream/issues"
+  "engines": {
+    "node": ">=0.10.0"
   },
-  "engines": [
-    "node >= 6.0"
-  ],
-  "main": "index.js",
+  "scripts": {
+    "test": "xo && ava",
+    "bench": "matcha bench.js"
+  },
   "files": [
     "index.js"
   ],
-  "scripts": {
-    "test": "tape test/*.js test/server/*.js"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "buffer-from": "^1.0.0",
-    "inherits": "^2.0.3",
-    "readable-stream": "^3.0.2",
-    "typedarray": "^0.0.6"
-  },
+  "keywords": [
+    "object",
+    "assign",
+    "extend",
+    "properties",
+    "es2015",
+    "ecmascript",
+    "harmony",
+    "ponyfill",
+    "prollyfill",
+    "polyfill",
+    "shim",
+    "browser"
+  ],
   "devDependencies": {
-    "tape": "^4.6.3"
-  },
-  "testling": {
-    "files": "test/*.js",
-    "browsers": [
-      "ie/8..latest",
-      "firefox/17..latest",
-      "firefox/nightly",
-      "chrome/22..latest",
-      "chrome/canary",
-      "opera/12..latest",
-      "opera/next",
-      "safari/5.1..latest",
-      "ipad/6.0..latest",
-      "iphone/6.0..latest",
-      "android-browser/4.2..latest"
-    ]
+    "ava": "^0.16.0",
+    "lodash": "^4.16.4",
+    "matcha": "^0.7.0",
+    "xo": "^0.16.0"
   }
 }
