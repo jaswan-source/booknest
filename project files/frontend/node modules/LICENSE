@@ -1,212 +1,160 @@
-## 0.6.3 / 2021-05-23
-  * Fix HKSCS encoding to prefer Big5 codes if both Big5 and HKSCS codes are possible (#264)
+# Release history
 
+All notable changes to this project will be documented in this file.
 
-## 0.6.2 / 2020-07-08
-  * Support Uint8Array-s decoding without conversion to Buffers, plus fix an edge case.
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+<details>
+  <summary><strong>Guiding Principles</strong></summary>
 
-## 0.6.1 / 2020-06-28
-  * Support Uint8Array-s directly when decoding (#246, by @gyzerok)
-  * Unify package.json version ranges to be strictly semver-compatible (#241)
-  * Fix minor issue in UTF-32 decoder's endianness detection code.
+- Changelogs are for humans, not machines.
+- There should be an entry for every single version.
+- The same types of changes should be grouped.
+- Versions and sections should be linkable.
+- The latest version comes first.
+- The release date of each versions is displayed.
+- Mention whether you follow Semantic Versioning.
 
+</details>
 
-## 0.6.0 / 2020-06-08
-  * Updated 'gb18030' encoding to :2005 edition (see https://github.com/whatwg/encoding/issues/22).
-  * Removed `iconv.extendNodeEncodings()` mechanism. It was deprecated 5 years ago and didn't work 
-    in recent Node versions.
-  * Reworked Streaming API behavior in browser environments to fix #204. Streaming API will be 
-    excluded by default in browser packs, saving ~100Kb bundle size, unless enabled explicitly using 
-    `iconv.enableStreamingAPI(require('stream'))`.
-  * Updates to development environment & tests:
-    * Added ./test/webpack private package to test complex new use cases that need custom environment. 
-      It's tested as a separate job in Travis CI.
-    * Updated generation code for the new EUC-KR index file format from Encoding Standard.
-    * Removed Buffer() constructor in tests (#197 by @gabrielschulhof).
+<details>
+  <summary><strong>Types of changes</strong></summary>
 
+Changelog entries are classified using the following labels _(from [keep-a-changelog](http://keepachangelog.com/)_):
 
-## 0.5.2 / 2020-06-08
-  * Added `iconv.getEncoder()` and `iconv.getDecoder()` methods to typescript definitions (#229).
-  * Fixed semver version to 6.1.2 to support Node 8.x (by @tanandara).
-  * Capped iconv version to 2.x as 3.x has dropped support for older Node versions.
-  * Switched from instanbul to c8 for code coverage.
+- `Added` for new features.
+- `Changed` for changes in existing functionality.
+- `Deprecated` for soon-to-be removed features.
+- `Removed` for now removed features.
+- `Fixed` for any bug fixes.
+- `Security` in case of vulnerabilities.
 
+</details>
 
-## 0.5.1 / 2020-01-18
+## [6.0.3] - 2020-01-16
 
-  * Added cp720 encoding (#221, by @kr-deps)
-  * (minor) Changed Changelog.md formatting to use h2. 
+- Merge pull request #31 for issue #30
 
+## [6.0.0] - 2017-10-13
 
-## 0.5.0 / 2019-06-26
+- refactor code to be more performant
+- refactor benchmarks
 
-  * Added UTF-32 encoding, both little-endian and big-endian variants (UTF-32LE, UTF32-BE). If endianness
-    is not provided for decoding, it's deduced automatically from the stream using a heuristic similar to
-    what we use in UTF-16. (great work in #216 by @kshetline)
-  * Several minor updates to README (#217 by @oldj, plus some more)
-  * Added Node versions 10 and 12 to Travis test harness.
+## [5.1.0] - 2017-10-13
 
+**Added**
 
-## 0.4.24 / 2018-08-22
+- Merge pull request #15 from aretecode/patch-1
+- adds support and tests for string & array iterators
 
-  * Added MIK encoding (#196, by @Ivan-Kalatchev)
+**Changed**
 
+- updates benchmarks
 
-## 0.4.23 / 2018-05-07
+## [5.0.2] - 2017-08-02
 
-  * Fix deprecation warning in Node v10 due to the last usage of `new Buffer` (#185, by @felixbuenemann)
-  * Switched from NodeBuffer to Buffer in typings (#155 by @felixfbecker, #186 by @larssn)
+- Merge pull request #14 from struct78/master
+- Added `undefined` check
 
+## [5.0.0] - 2017-06-21
 
-## 0.4.22 / 2018-05-05
+- Merge pull request #12 from aretecode/iterator
+- Set Iterator + Map Iterator
+- streamline `isbuffer`, minor edits
 
-  * Use older semver style for dependencies to be compatible with Node version 0.10 (#182, by @dougwilson)
-  * Fix tests to accomodate fixes in Node v10 (#182, by @dougwilson)
+## [4.0.0] - 2017-05-19
 
+- Merge pull request #8 from tunnckoCore/master
+- update deps
 
-## 0.4.21 / 2018-04-06
+## [3.2.2] - 2017-05-16
 
-  * Fix encoding canonicalization (#156)
-  * Fix the paths in the "browser" field in package.json (#174 by @LMLB)
-  * Removed "contributors" section in package.json - see Git history instead.
+- fix version
 
+## [3.2.1] - 2017-05-16
 
-## 0.4.20 / 2018-04-06
+- add browserify
 
-  * Updated `new Buffer()` usages with recommended replacements as it's being deprecated in Node v10 (#176, #178 by @ChALkeR)
+## [3.2.0] - 2017-04-25
 
+- Merge pull request #10 from ksheedlo/unrequire-buffer
+- add `promise` support and tests
+- Remove unnecessary `Buffer` check
 
-## 0.4.19 / 2017-09-09
+## [3.1.0] - 2016-12-07
 
-  * Fixed iso8859-1 codec regression in handling untranslatable characters (#162, caused by #147)
-  * Re-generated windows1255 codec, because it was updated in iconv project
-  * Fixed grammar in error message when iconv-lite is loaded with encoding other than utf8
+- Merge pull request #7 from laggingreflex/err
+- add support for `error` and tests
+- run update
 
+## [3.0.4] - 2016-07-29
 
-## 0.4.18 / 2017-06-13
+- move tests
+- run update
 
-  * Fixed CESU-8 regression in Node v8.
+## [3.0.3] - 2016-05-03
 
+- fix prepublish script
+- remove unused dep
 
-## 0.4.17 / 2017-04-22
+## [3.0.0] - 2015-11-17
 
- * Updated typescript definition file to support Angular 2 AoT mode (#153 by @larssn)
+- add typed array support
+- Merge pull request #5 from miguelmota/typed-arrays
+- adds new tests
 
+## [2.0.1] - 2015-08-21
 
-## 0.4.16 / 2017-04-22
+- use `is-buffer` module
 
- * Added support for React Native (#150)
- * Changed iso8859-1 encoding to usine internal 'binary' encoding, as it's the same thing (#147 by @mscdex)
- * Fixed typo in Readme (#138 by @jiangzhuo)
- * Fixed build for Node v6.10+ by making correct version comparison
- * Added a warning if iconv-lite is loaded not as utf-8 (see #142)
+## [2.0.0] - 2015-05-31
 
+- Create fallback for `Array.isArray` if used as a browser package
+- Merge pull request #2 from dtothefp/patch-1
+- Merge pull request #3 from pdehaan/patch-1
+- Merge branch 'master' of https://github.com/chorks/kind-of into chorks-master
+- optimizations, mostly date and regex
 
-## 0.4.15 / 2016-11-21
+## [1.1.0] - 2015-02-09
 
- * Fixed typescript type definition (#137)
+- adds `buffer` support
+- adds tests for `buffer`
 
+## [1.0.0] - 2015-01-19
 
-## 0.4.14 / 2016-11-20
+- update benchmarks
+- optimizations based on benchmarks
 
- * Preparation for v1.0
- * Added Node v6 and latest Node versions to Travis CI test rig
- * Deprecated Node v0.8 support
- * Typescript typings (@larssn)
- * Fix encoding of Euro character in GB 18030 (inspired by @lygstate)
- * Add ms prefix to dbcs windows encodings (@rokoroku)
+## [0.1.2] - 2014-10-26
 
+- return `typeof` value if it's not an object. very slight speed improvement
+- use `.slice`
+- adds benchmarks
 
-## 0.4.13 / 2015-10-01
+## [0.1.0] - 2014-9-26
 
- * Fix silly mistake in deprecation notice.
+- first commit
 
+[6.0.0]: https://github.com/jonschlinkert/kind-of/compare/5.1.0...6.0.0
+[5.1.0]: https://github.com/jonschlinkert/kind-of/compare/5.0.2...5.1.0
+[5.0.2]: https://github.com/jonschlinkert/kind-of/compare/5.0.1...5.0.2
+[5.0.1]: https://github.com/jonschlinkert/kind-of/compare/5.0.0...5.0.1
+[5.0.0]: https://github.com/jonschlinkert/kind-of/compare/4.0.0...5.0.0
+[4.0.0]: https://github.com/jonschlinkert/kind-of/compare/3.2.2...4.0.0
+[3.2.2]: https://github.com/jonschlinkert/kind-of/compare/3.2.1...3.2.2
+[3.2.1]: https://github.com/jonschlinkert/kind-of/compare/3.2.0...3.2.1
+[3.2.0]: https://github.com/jonschlinkert/kind-of/compare/3.1.0...3.2.0
+[3.1.0]: https://github.com/jonschlinkert/kind-of/compare/3.0.4...3.1.0
+[3.0.4]: https://github.com/jonschlinkert/kind-of/compare/3.0.3...3.0.4
+[3.0.3]: https://github.com/jonschlinkert/kind-of/compare/3.0.0...3.0.3
+[3.0.0]: https://github.com/jonschlinkert/kind-of/compare/2.0.1...3.0.0
+[2.0.1]: https://github.com/jonschlinkert/kind-of/compare/2.0.0...2.0.1
+[2.0.0]: https://github.com/jonschlinkert/kind-of/compare/1.1.0...2.0.0
+[1.1.0]: https://github.com/jonschlinkert/kind-of/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/jonschlinkert/kind-of/compare/0.1.2...1.0.0
+[0.1.2]: https://github.com/jonschlinkert/kind-of/compare/0.1.0...0.1.2
+[0.1.0]: https://github.com/jonschlinkert/kind-of/commit/2fae09b0b19b1aadb558e9be39f0c3ef6034eb87
 
-## 0.4.12 / 2015-09-26
-
- * Node v4 support:
-   * Added CESU-8 decoding (#106)
-   * Added deprecation notice for `extendNodeEncodings`
-   * Added Travis tests for Node v4 and io.js latest (#105 by @Mithgol)
-
-
-## 0.4.11 / 2015-07-03
-
- * Added CESU-8 encoding.
-
-
-## 0.4.10 / 2015-05-26
-
- * Changed UTF-16 endianness heuristic to take into account any ASCII chars, not
-   just spaces. This should minimize the importance of "default" endianness.
-
-
-## 0.4.9 / 2015-05-24
-
- * Streamlined BOM handling: strip BOM by default, add BOM when encoding if 
-   addBOM: true. Added docs to Readme.
- * UTF16 now uses UTF16-LE by default.
- * Fixed minor issue with big5 encoding.
- * Added io.js testing on Travis; updated node-iconv version to test against.
-   Now we just skip testing SBCS encodings that node-iconv doesn't support.
- * (internal refactoring) Updated codec interface to use classes.
- * Use strict mode in all files.
-
-
-## 0.4.8 / 2015-04-14
- 
- * added alias UNICODE-1-1-UTF-7 for UTF-7 encoding (#94)
-
-
-## 0.4.7 / 2015-02-05
-
- * stop official support of Node.js v0.8. Should still work, but no guarantees.
-   reason: Packages needed for testing are hard to get on Travis CI.
- * work in environment where Object.prototype is monkey patched with enumerable 
-   props (#89).
-
-
-## 0.4.6 / 2015-01-12
- 
- * fix rare aliases of single-byte encodings (thanks @mscdex)
- * double the timeout for dbcs tests to make them less flaky on travis
-
-
-## 0.4.5 / 2014-11-20
-
- * fix windows-31j and x-sjis encoding support (@nleush)
- * minor fix: undefined variable reference when internal error happens
-
-
-## 0.4.4 / 2014-07-16
-
- * added encodings UTF-7 (RFC2152) and UTF-7-IMAP (RFC3501 Section 5.1.3)
- * fixed streaming base64 encoding
-
-
-## 0.4.3 / 2014-06-14
-
- * added encodings UTF-16BE and UTF-16 with BOM
-
-
-## 0.4.2 / 2014-06-12
-
- * don't throw exception if `extendNodeEncodings()` is called more than once
-
-
-## 0.4.1 / 2014-06-11
-
- * codepage 808 added
-
-
-## 0.4.0 / 2014-06-10
-
- * code is rewritten from scratch
- * all widespread encodings are supported
- * streaming interface added
- * browserify compatibility added
- * (optional) extend core primitive encodings to make usage even simpler
- * moved from vows to mocha as the testing framework
-
-
+[Unreleased]: https://github.com/jonschlinkert/kind-of/compare/0.1.2...HEAD
+[keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog

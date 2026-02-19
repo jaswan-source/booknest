@@ -1,53 +1,35 @@
 {
-	"name": "find-up",
-	"version": "4.1.0",
-	"description": "Find a file or directory by walking up parent directories",
-	"license": "MIT",
-	"repository": "sindresorhus/find-up",
-	"author": {
-		"name": "Sindre Sorhus",
-		"email": "sindresorhus@gmail.com",
-		"url": "sindresorhus.com"
-	},
-	"engines": {
-		"node": ">=8"
-	},
-	"scripts": {
-		"test": "xo && ava && tsd"
-	},
-	"files": [
-		"index.js",
-		"index.d.ts"
-	],
-	"keywords": [
-		"find",
-		"up",
-		"find-up",
-		"findup",
-		"look-up",
-		"look",
-		"file",
-		"search",
-		"match",
-		"package",
-		"resolve",
-		"parent",
-		"parents",
-		"folder",
-		"directory",
-		"walk",
-		"walking",
-		"path"
-	],
-	"dependencies": {
-		"locate-path": "^5.0.0",
-		"path-exists": "^4.0.0"
-	},
-	"devDependencies": {
-		"ava": "^2.1.0",
-		"is-path-inside": "^2.1.0",
-		"tempy": "^0.3.0",
-		"tsd": "^0.7.3",
-		"xo": "^0.24.0"
-	}
+  "name": "kleur",
+  "version": "3.0.3",
+  "repository": "lukeed/kleur",
+  "description": "The fastest Node.js library for formatting terminal text with ANSI colors~!",
+  "license": "MIT",
+  "files": [
+    "*.js",
+    "*.d.ts"
+  ],
+  "author": {
+    "name": "Luke Edwards",
+    "email": "luke.edwards05@gmail.com",
+    "url": "lukeed.com"
+  },
+  "scripts": {
+    "test": "tape test/*.js | tap-spec"
+  },
+  "engines": {
+    "node": ">=6"
+  },
+  "keywords": [
+    "ansi",
+    "cli",
+    "color",
+    "colors",
+    "console",
+    "terminal"
+  ],
+  "types": "kleur.d.ts",
+  "devDependencies": {
+    "tap-spec": "^5.0.0",
+    "tape": "^4.9.1"
+  }
 }
