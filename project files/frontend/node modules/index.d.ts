@@ -1,1 +1,37 @@
-!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?t(exports):"function"==typeof define&&define.amd?define(["exports"],t):t(e.klona={})}(this,(function(e){e.klona=function e(t){if("object"!=typeof t)return t;var o,r,n=Object.prototype.toString.call(t);if("[object Object]"===n){if(t.constructor!==Object&&"function"==typeof t.constructor)for(o in r=new t.constructor,t)t.hasOwnProperty(o)&&r[o]!==t[o]&&(r[o]=e(t[o]));else for(o in r={},t)"__proto__"===o?Object.defineProperty(r,o,{value:e(t[o]),configurable:!0,enumerable:!0,writable:!0}):r[o]=e(t[o]);return r}if("[object Array]"===n){for(o=t.length,r=Array(o);o--;)r[o]=e(t[o]);return r}return"[object Set]"===n?(r=new Set,t.forEach((function(t){r.add(e(t))})),r):"[object Map]"===n?(r=new Map,t.forEach((function(t,o){r.set(e(o),e(t))})),r):"[object Date]"===n?new Date(+t):"[object RegExp]"===n?((r=new RegExp(t.source,t.flags)).lastIndex=t.lastIndex,r):"[object DataView]"===n?new t.constructor(e(t.buffer)):"[object ArrayBuffer]"===n?t.slice(0):"Array]"===n.slice(-6)?new t.constructor(t):t}}));
+# Param Case
+
+[![NPM version][npm-image]][npm-url]
+[![NPM downloads][downloads-image]][downloads-url]
+[![Bundle size][bundlephobia-image]][bundlephobia-url]
+
+> Transform into a lower cased string with dashes between words.
+
+## Installation
+
+```
+npm install param-case --save
+```
+
+## Usage
+
+```js
+import { paramCase } from "param-case";
+
+paramCase("string"); //=> "string"
+paramCase("dot.case"); //=> "dot-case"
+paramCase("PascalCase"); //=> "pascal-case"
+paramCase("version 1.2.10"); //=> "version-1-2-10"
+```
+
+The function also accepts [`options`](https://github.com/blakeembrey/change-case#options).
+
+## License
+
+MIT
+
+[npm-image]: https://img.shields.io/npm/v/param-case.svg?style=flat
+[npm-url]: https://npmjs.org/package/param-case
+[downloads-image]: https://img.shields.io/npm/dm/param-case.svg?style=flat
+[downloads-url]: https://npmjs.org/package/param-case
+[bundlephobia-image]: https://img.shields.io/bundlephobia/minzip/param-case.svg
+[bundlephobia-url]: https://bundlephobia.com/result?p=param-case

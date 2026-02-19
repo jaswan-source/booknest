@@ -1,13 +1,22 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.joinPathSegments = void 0;
-function joinPathSegments(a, b, separator) {
-    /**
-     * The correct handling of cases when the first segment is a root (`/`, `C:/`) or UNC path (`//?/C:/`).
-     */
-    if (a.endsWith(separator)) {
-        return a + b;
+import { paramCase } from ".";
+var TEST_CASES = [
+    ["", ""],
+    ["test", "test"],
+    ["test string", "test-string"],
+    ["Test String", "test-string"],
+    ["TestV2", "test-v2"],
+    ["version 1.2.10", "version-1-2-10"],
+    ["version 1.21.0", "version-1-21-0"],
+];
+describe("param case", function () {
+    var _loop_1 = function (input, result) {
+        it(input + " -> " + result, function () {
+            expect(paramCase(input)).toEqual(result);
+        });
+    };
+    for (var _i = 0, TEST_CASES_1 = TEST_CASES; _i < TEST_CASES_1.length; _i++) {
+        var _a = TEST_CASES_1[_i], input = _a[0], result = _a[1];
+        _loop_1(input, result);
     }
-    return a + separator + b;
-}
-exports.joinPathSegments = joinPathSegments;
+});
+//# sourceMappingURL=index.spec.js.map

@@ -1,35 +1,48 @@
 {
-  "name": "kleur",
-  "version": "3.0.3",
-  "repository": "lukeed/kleur",
-  "description": "The fastest Node.js library for formatting terminal text with ANSI colors~!",
+  "name": "pify",
+  "version": "2.3.0",
+  "description": "Promisify a callback-style function",
   "license": "MIT",
-  "files": [
-    "*.js",
-    "*.d.ts"
-  ],
+  "repository": "sindresorhus/pify",
   "author": {
-    "name": "Luke Edwards",
-    "email": "luke.edwards05@gmail.com",
-    "url": "lukeed.com"
-  },
-  "scripts": {
-    "test": "tape test/*.js | tap-spec"
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=0.10.0"
   },
-  "keywords": [
-    "ansi",
-    "cli",
-    "color",
-    "colors",
-    "console",
-    "terminal"
+  "scripts": {
+    "test": "xo && ava && npm run optimization-test",
+    "optimization-test": "node --allow-natives-syntax optimization-test.js"
+  },
+  "files": [
+    "index.js"
   ],
-  "types": "kleur.d.ts",
+  "keywords": [
+    "promise",
+    "promises",
+    "promisify",
+    "denodify",
+    "denodeify",
+    "callback",
+    "cb",
+    "node",
+    "then",
+    "thenify",
+    "convert",
+    "transform",
+    "wrap",
+    "wrapper",
+    "bind",
+    "to",
+    "async",
+    "es2015"
+  ],
   "devDependencies": {
-    "tap-spec": "^5.0.0",
-    "tape": "^4.9.1"
+    "ava": "*",
+    "pinkie-promise": "^1.0.0",
+    "v8-natives": "0.0.2",
+    "xo": "*"
   }
 }
