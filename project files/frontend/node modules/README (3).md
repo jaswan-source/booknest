@@ -1,325 +1,247 @@
+/*
+  Copyright (C) 2015 Yusuke Suzuki <utatane.tea@gmail.com>
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+"use strict";
+
+/* eslint-disable no-underscore-dangle */
+
+const Scope = require("./scope");
+const assert = require("assert");
+
+const GlobalScope = Scope.GlobalScope;
+const CatchScope = Scope.CatchScope;
+const WithScope = Scope.WithScope;
+const ModuleScope = Scope.ModuleScope;
+const ClassScope = Scope.ClassScope;
+const SwitchScope = Scope.SwitchScope;
+const FunctionScope = Scope.FunctionScope;
+const ForScope = Scope.ForScope;
+const FunctionExpressionNameScope = Scope.FunctionExpressionNameScope;
+const BlockScope = Scope.BlockScope;
+
 /**
- * @fileoverview Validates configs.
- * @author Brandon Mills
+ * @class ScopeManager
  */
+class ScopeManager {
+    constructor(options) {
+        this.scopes = [];
+        this.globalScope = null;
+        this.__nodeToScope = new WeakMap();
+        this.__currentScope = null;
+        this.__options = options;
+        this.__declaredVariables = new WeakMap();
+    }
 
-/* eslint class-methods-use-this: "off" */
+    __useDirective() {
+        return this.__options.directive;
+    }
 
-//------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
+    __isOptimistic() {
+        return this.__options.optimistic;
+    }
 
-import util from "util";
-import * as ConfigOps from "./config-ops.js";
-import { emitDeprecationWarning } from "./deprecation-warnings.js";
-import ajvOrig from "./ajv.js";
-import configSchema from "../../conf/config-schema.js";
-import BuiltInEnvironments from "../../conf/environments.js";
+    __ignoreEval() {
+        return this.__options.ignoreEval;
+    }
 
-const ajv = ajvOrig();
+    __isNodejsScope() {
+        return this.__options.nodejsScope;
+    }
 
-const ruleValidators = new WeakMap();
-const noop = Function.prototype;
+    isModule() {
+        return this.__options.sourceType === "module";
+    }
 
-//------------------------------------------------------------------------------
-// Private
-//------------------------------------------------------------------------------
-let validateSchema;
-const severityMap = {
-    error: 2,
-    warn: 1,
-    off: 0
-};
+    isImpliedStrict() {
+        return this.__options.impliedStrict;
+    }
 
-const validated = new WeakSet();
+    isStrictModeSupported() {
+        return this.__options.ecmaVersion >= 5;
+    }
 
-//-----------------------------------------------------------------------------
-// Exports
-//-----------------------------------------------------------------------------
-
-export default class ConfigValidator {
-    constructor({ builtInRules = new Map() } = {}) {
-        this.builtInRules = builtInRules;
+    // Returns appropriate scope for this node.
+    __get(node) {
+        return this.__nodeToScope.get(node);
     }
 
     /**
-     * Gets a complete options schema for a rule.
-     * @param {{create: Function, schema: (Array|null)}} rule A new-style rule object
-     * @returns {Object} JSON Schema for the rule's options.
+     * Get variables that are declared by the node.
+     *
+     * "are declared by the node" means the node is same as `Variable.defs[].node` or `Variable.defs[].parent`.
+     * If the node declares nothing, this method returns an empty array.
+     * CAUTION: This API is experimental. See https://github.com/estools/escope/pull/69 for more details.
+     *
+     * @param {Espree.Node} node - a node to get.
+     * @returns {Variable[]} variables that declared by the node.
      */
-    getRuleOptionsSchema(rule) {
-        if (!rule) {
+    getDeclaredVariables(node) {
+        return this.__declaredVariables.get(node) || [];
+    }
+
+    /**
+     * acquire scope from node.
+     * @method ScopeManager#acquire
+     * @param {Espree.Node} node - node for the acquired scope.
+     * @param {boolean=} inner - look up the most inner scope, default value is false.
+     * @returns {Scope?} Scope from node
+     */
+    acquire(node, inner) {
+
+        /**
+         * predicate
+         * @param {Scope} testScope - scope to test
+         * @returns {boolean} predicate
+         */
+        function predicate(testScope) {
+            if (testScope.type === "function" && testScope.functionExpressionScope) {
+                return false;
+            }
+            return true;
+        }
+
+        const scopes = this.__get(node);
+
+        if (!scopes || scopes.length === 0) {
             return null;
         }
 
-        const schema = rule.schema || rule.meta && rule.meta.schema;
-
-        // Given a tuple of schemas, insert warning level at the beginning
-        if (Array.isArray(schema)) {
-            if (schema.length) {
-                return {
-                    type: "array",
-                    items: schema,
-                    minItems: 0,
-                    maxItems: schema.length
-                };
-            }
-            return {
-                type: "array",
-                minItems: 0,
-                maxItems: 0
-            };
-
+        // Heuristic selection from all scopes.
+        // If you would like to get all scopes, please use ScopeManager#acquireAll.
+        if (scopes.length === 1) {
+            return scopes[0];
         }
 
-        // Given a full schema, leave it alone
-        return schema || null;
-    }
+        if (inner) {
+            for (let i = scopes.length - 1; i >= 0; --i) {
+                const scope = scopes[i];
 
-    /**
-     * Validates a rule's severity and returns the severity value. Throws an error if the severity is invalid.
-     * @param {options} options The given options for the rule.
-     * @returns {number|string} The rule's severity value
-     */
-    validateRuleSeverity(options) {
-        const severity = Array.isArray(options) ? options[0] : options;
-        const normSeverity = typeof severity === "string" ? severityMap[severity.toLowerCase()] : severity;
-
-        if (normSeverity === 0 || normSeverity === 1 || normSeverity === 2) {
-            return normSeverity;
-        }
-
-        throw new Error(`\tSeverity should be one of the following: 0 = off, 1 = warn, 2 = error (you passed '${util.inspect(severity).replace(/'/gu, "\"").replace(/\n/gu, "")}').\n`);
-
-    }
-
-    /**
-     * Validates the non-severity options passed to a rule, based on its schema.
-     * @param {{create: Function}} rule The rule to validate
-     * @param {Array} localOptions The options for the rule, excluding severity
-     * @returns {void}
-     */
-    validateRuleSchema(rule, localOptions) {
-        if (!ruleValidators.has(rule)) {
-            const schema = this.getRuleOptionsSchema(rule);
-
-            if (schema) {
-                ruleValidators.set(rule, ajv.compile(schema));
-            }
-        }
-
-        const validateRule = ruleValidators.get(rule);
-
-        if (validateRule) {
-            validateRule(localOptions);
-            if (validateRule.errors) {
-                throw new Error(validateRule.errors.map(
-                    error => `\tValue ${JSON.stringify(error.data)} ${error.message}.\n`
-                ).join(""));
-            }
-        }
-    }
-
-    /**
-     * Validates a rule's options against its schema.
-     * @param {{create: Function}|null} rule The rule that the config is being validated for
-     * @param {string} ruleId The rule's unique name.
-     * @param {Array|number} options The given options for the rule.
-     * @param {string|null} source The name of the configuration source to report in any errors. If null or undefined,
-     * no source is prepended to the message.
-     * @returns {void}
-     */
-    validateRuleOptions(rule, ruleId, options, source = null) {
-        try {
-            const severity = this.validateRuleSeverity(options);
-
-            if (severity !== 0) {
-                this.validateRuleSchema(rule, Array.isArray(options) ? options.slice(1) : []);
-            }
-        } catch (err) {
-            const enhancedMessage = `Configuration for rule "${ruleId}" is invalid:\n${err.message}`;
-
-            if (typeof source === "string") {
-                throw new Error(`${source}:\n\t${enhancedMessage}`);
-            } else {
-                throw new Error(enhancedMessage);
-            }
-        }
-    }
-
-    /**
-     * Validates an environment object
-     * @param {Object} environment The environment config object to validate.
-     * @param {string} source The name of the configuration source to report in any errors.
-     * @param {function(envId:string): Object} [getAdditionalEnv] A map from strings to loaded environments.
-     * @returns {void}
-     */
-    validateEnvironment(
-        environment,
-        source,
-        getAdditionalEnv = noop
-    ) {
-
-        // not having an environment is ok
-        if (!environment) {
-            return;
-        }
-
-        Object.keys(environment).forEach(id => {
-            const env = getAdditionalEnv(id) || BuiltInEnvironments.get(id) || null;
-
-            if (!env) {
-                const message = `${source}:\n\tEnvironment key "${id}" is unknown\n`;
-
-                throw new Error(message);
-            }
-        });
-    }
-
-    /**
-     * Validates a rules config object
-     * @param {Object} rulesConfig The rules config object to validate.
-     * @param {string} source The name of the configuration source to report in any errors.
-     * @param {function(ruleId:string): Object} getAdditionalRule A map from strings to loaded rules
-     * @returns {void}
-     */
-    validateRules(
-        rulesConfig,
-        source,
-        getAdditionalRule = noop
-    ) {
-        if (!rulesConfig) {
-            return;
-        }
-
-        Object.keys(rulesConfig).forEach(id => {
-            const rule = getAdditionalRule(id) || this.builtInRules.get(id) || null;
-
-            this.validateRuleOptions(rule, id, rulesConfig[id], source);
-        });
-    }
-
-    /**
-     * Validates a `globals` section of a config file
-     * @param {Object} globalsConfig The `globals` section
-     * @param {string|null} source The name of the configuration source to report in the event of an error.
-     * @returns {void}
-     */
-    validateGlobals(globalsConfig, source = null) {
-        if (!globalsConfig) {
-            return;
-        }
-
-        Object.entries(globalsConfig)
-            .forEach(([configuredGlobal, configuredValue]) => {
-                try {
-                    ConfigOps.normalizeConfigGlobal(configuredValue);
-                } catch (err) {
-                    throw new Error(`ESLint configuration of global '${configuredGlobal}' in ${source} is invalid:\n${err.message}`);
+                if (predicate(scope)) {
+                    return scope;
                 }
-            });
-    }
-
-    /**
-     * Validate `processor` configuration.
-     * @param {string|undefined} processorName The processor name.
-     * @param {string} source The name of config file.
-     * @param {function(id:string): Processor} getProcessor The getter of defined processors.
-     * @returns {void}
-     */
-    validateProcessor(processorName, source, getProcessor) {
-        if (processorName && !getProcessor(processorName)) {
-            throw new Error(`ESLint configuration of processor in '${source}' is invalid: '${processorName}' was not found.`);
-        }
-    }
-
-    /**
-     * Formats an array of schema validation errors.
-     * @param {Array} errors An array of error messages to format.
-     * @returns {string} Formatted error message
-     */
-    formatErrors(errors) {
-        return errors.map(error => {
-            if (error.keyword === "additionalProperties") {
-                const formattedPropertyPath = error.dataPath.length ? `${error.dataPath.slice(1)}.${error.params.additionalProperty}` : error.params.additionalProperty;
-
-                return `Unexpected top-level property "${formattedPropertyPath}"`;
             }
-            if (error.keyword === "type") {
-                const formattedField = error.dataPath.slice(1);
-                const formattedExpectedType = Array.isArray(error.schema) ? error.schema.join("/") : error.schema;
-                const formattedValue = JSON.stringify(error.data);
+        } else {
+            for (let i = 0, iz = scopes.length; i < iz; ++i) {
+                const scope = scopes[i];
 
-                return `Property "${formattedField}" is the wrong type (expected ${formattedExpectedType} but got \`${formattedValue}\`)`;
+                if (predicate(scope)) {
+                    return scope;
+                }
             }
+        }
 
-            const field = error.dataPath[0] === "." ? error.dataPath.slice(1) : error.dataPath;
-
-            return `"${field}" ${error.message}. Value: ${JSON.stringify(error.data)}`;
-        }).map(message => `\t- ${message}.\n`).join("");
+        return null;
     }
 
     /**
-     * Validates the top level properties of the config object.
-     * @param {Object} config The config object to validate.
-     * @param {string} source The name of the configuration source to report in any errors.
-     * @returns {void}
+     * acquire all scopes from node.
+     * @method ScopeManager#acquireAll
+     * @param {Espree.Node} node - node for the acquired scope.
+     * @returns {Scopes?} Scope array
      */
-    validateConfigSchema(config, source = null) {
-        validateSchema = validateSchema || ajv.compile(configSchema);
-
-        if (!validateSchema(config)) {
-            throw new Error(`ESLint configuration in ${source} is invalid:\n${this.formatErrors(validateSchema.errors)}`);
-        }
-
-        if (Object.hasOwnProperty.call(config, "ecmaFeatures")) {
-            emitDeprecationWarning(source, "ESLINT_LEGACY_ECMAFEATURES");
-        }
+    acquireAll(node) {
+        return this.__get(node);
     }
 
     /**
-     * Validates an entire config object.
-     * @param {Object} config The config object to validate.
-     * @param {string} source The name of the configuration source to report in any errors.
-     * @param {function(ruleId:string): Object} [getAdditionalRule] A map from strings to loaded rules.
-     * @param {function(envId:string): Object} [getAdditionalEnv] A map from strings to loaded envs.
-     * @returns {void}
+     * release the node.
+     * @method ScopeManager#release
+     * @param {Espree.Node} node - releasing node.
+     * @param {boolean=} inner - look up the most inner scope, default value is false.
+     * @returns {Scope?} upper scope for the node.
      */
-    validate(config, source, getAdditionalRule, getAdditionalEnv) {
-        this.validateConfigSchema(config, source);
-        this.validateRules(config.rules, source, getAdditionalRule);
-        this.validateEnvironment(config.env, source, getAdditionalEnv);
-        this.validateGlobals(config.globals, source);
+    release(node, inner) {
+        const scopes = this.__get(node);
 
-        for (const override of config.overrides || []) {
-            this.validateRules(override.rules, source, getAdditionalRule);
-            this.validateEnvironment(override.env, source, getAdditionalEnv);
-            this.validateGlobals(config.globals, source);
-        }
-    }
+        if (scopes && scopes.length) {
+            const scope = scopes[0].upper;
 
-    /**
-     * Validate config array object.
-     * @param {ConfigArray} configArray The config array to validate.
-     * @returns {void}
-     */
-    validateConfigArray(configArray) {
-        const getPluginEnv = Map.prototype.get.bind(configArray.pluginEnvironments);
-        const getPluginProcessor = Map.prototype.get.bind(configArray.pluginProcessors);
-        const getPluginRule = Map.prototype.get.bind(configArray.pluginRules);
-
-        // Validate.
-        for (const element of configArray) {
-            if (validated.has(element)) {
-                continue;
+            if (!scope) {
+                return null;
             }
-            validated.add(element);
-
-            this.validateEnvironment(element.env, element.name, getPluginEnv);
-            this.validateGlobals(element.globals, element.name);
-            this.validateProcessor(element.processor, element.name, getPluginProcessor);
-            this.validateRules(element.rules, element.name, getPluginRule);
+            return this.acquire(scope.block, inner);
         }
+        return null;
     }
 
+    attach() { } // eslint-disable-line class-methods-use-this
+
+    detach() { } // eslint-disable-line class-methods-use-this
+
+    __nestScope(scope) {
+        if (scope instanceof GlobalScope) {
+            assert(this.__currentScope === null);
+            this.globalScope = scope;
+        }
+        this.__currentScope = scope;
+        return scope;
+    }
+
+    __nestGlobalScope(node) {
+        return this.__nestScope(new GlobalScope(this, node));
+    }
+
+    __nestBlockScope(node) {
+        return this.__nestScope(new BlockScope(this, this.__currentScope, node));
+    }
+
+    __nestFunctionScope(node, isMethodDefinition) {
+        return this.__nestScope(new FunctionScope(this, this.__currentScope, node, isMethodDefinition));
+    }
+
+    __nestForScope(node) {
+        return this.__nestScope(new ForScope(this, this.__currentScope, node));
+    }
+
+    __nestCatchScope(node) {
+        return this.__nestScope(new CatchScope(this, this.__currentScope, node));
+    }
+
+    __nestWithScope(node) {
+        return this.__nestScope(new WithScope(this, this.__currentScope, node));
+    }
+
+    __nestClassScope(node) {
+        return this.__nestScope(new ClassScope(this, this.__currentScope, node));
+    }
+
+    __nestSwitchScope(node) {
+        return this.__nestScope(new SwitchScope(this, this.__currentScope, node));
+    }
+
+    __nestModuleScope(node) {
+        return this.__nestScope(new ModuleScope(this, this.__currentScope, node));
+    }
+
+    __nestFunctionExpressionNameScope(node) {
+        return this.__nestScope(new FunctionExpressionNameScope(this, this.__currentScope, node));
+    }
+
+    __isES6() {
+        return this.__options.ecmaVersion >= 6;
+    }
 }
+
+module.exports = ScopeManager;
+
+/* vim: set sw=4 ts=4 et tw=80 : */
